@@ -1,41 +1,88 @@
 from bottle import route, run, request, abort, static_file
 
 from fsm import TocMachine
+from utils import send_text_message
 
 
-VERIFY_TOKEN = "Your Webhook Verify Token"
+VERIFY_TOKEN = "12399987"
 machine = TocMachine(
     states=[
         'user',
-        'state1',
-        'state2'
+        'login',
+        'accountOK',
+        'accountFail',
+        'loginSucceed',
+        'loginFail',
+        'hall'
     ],
     transitions=[
         {
-            'trigger': 'advance',
-            'source': 'user',
-            'dest': 'state1',
-            'conditions': 'is_going_to_state1'
-        },
-        {
-            'trigger': 'advance',
-            'source': 'user',
-            'dest': 'state2',
-            'conditions': 'is_going_to_state2'
-        },
-        {
-            'trigger': 'go_back',
+            'trigger': 'back_home',
             'source': [
-                'state1',
-                'state2'
+                'user',
+                'login',
+                'accountOK',
+                'loginSucceed',
+                'hall'
             ],
-            'dest': 'user'
+            'dest':'user',
+            'conditions':'to_home'
+        },
+        #-- login ---------------------
+        {
+            'trigger': 'advance',
+            'source': 'user',
+            'dest': 'login',
+            'conditions': 'to_login'
+        },
+        #-------- account -------------
+        {
+            'trigger': 'advance',
+            'source': 'login',
+            'dest':'accountOK',
+            'conditions': 'to_accountOK',
+        },
+        {
+            'trigger': 'advance',
+            'source': 'login',
+            'dest':'accountFail',
+            'unless': 'to_accountOK',
+        },
+        {
+            'trigger': 'back_login',
+            'source': 'accountFail',
+            'dest':'login',
+        },
+        #-------- password -------------
+        {
+            'trigger': 'advance',
+            'source': 'accountOK',
+            'dest':'loginSucceed',
+            'conditions' : 'to_loginSucceed'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'accountOK',
+            'dest':'loginFail',
+            'unless' : 'to_loginSucceed'
+        },
+        {
+            'trigger': 'back_login',
+            'source': 'loginFail',
+            'dest':'accountOK',
+        },
+        {
+            'trigger' : 'intoHall',
+            'source' : 'loginSucceed',
+            'dest' : 'hall',
         }
     ],
     initial='user',
     auto_transitions=False,
     show_conditions=True,
+    ignore_invalid_triggers=True
 )
+
 
 
 @route("/webhook", method="GET")
@@ -61,7 +108,17 @@ def webhook_handler():
 
     if body['object'] == "page":
         event = body['entry'][0]['messaging'][0]
-        machine.advance(event)
+        text = event['message']['text']
+        sender_id = event['sender']['id']
+        if text.lower() == '!state':
+            send_text_message(sender_id, 'FSM SATTE = ' + machine.state)
+        elif text.lower() == '!home':
+            machine.back_home()
+            send_text_message(sender_id, "Back To HOME~")
+        else:
+            machine.advance(event)
+
+        print("\n\n----***-------***-----***----***----***---\n\n")
         return 'OK'
 
 

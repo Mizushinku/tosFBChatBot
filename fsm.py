@@ -1,6 +1,8 @@
 from transitions.extensions import GraphMachine
+import pymysql
+from dbHandler import DBHandler
 
-from utils import send_text_message
+from utils import send_text_message, send_image_url
 
 
 class TocMachine(GraphMachine):
@@ -10,34 +12,79 @@ class TocMachine(GraphMachine):
             **machine_configs
         )
 
-    def is_going_to_state1(self, event):
+#----------------------------------------------------------------#
+
+    def to_home(self):
+        if self.state == 'user':
+            return False
+        return True
+
+    def to_login(self, event):
         if event.get("message"):
             text = event['message']['text']
-            return text.lower() == 'go to state1'
+            return text.lower() == 'login'
         return False
 
-    def is_going_to_state2(self, event):
+    def to_accountOK(self, event):
         if event.get("message"):
-            text = event['message']['text']
-            return text.lower() == 'go to state2'
-        return False
+            account = event['message']['text']
+            db = self.accessDB()
+            return db.confirmAccount(account)
 
-    def on_enter_state1(self, event):
-        print("I'm entering state1")
+    def to_loginSucceed(self, event):
+        if event.get("message"):
+            psd = event['message']['text']
+            db = self.accessDB()
+            return db.confirmPassword(psd)
+
+
+#----------------------------------------------------------------#
+
+    def on_enter_user(self):
+        print("I'm starting form initial state!")
+
+    def on_enter_login(self, event):
+        print("I'm login...")
 
         sender_id = event['sender']['id']
-        responese = send_text_message(sender_id, "I'm entering state1")
-        self.go_back()
-
-    def on_exit_state1(self):
-        print('Leaving state1')
-
-    def on_enter_state2(self, event):
-        print("I'm entering state2")
-
+        responese = send_text_message(sender_id, "Your Account :")
+    
+    def on_enter_accountOK(self, event):
+        print("Account confirm")
         sender_id = event['sender']['id']
-        send_text_message(sender_id, "I'm entering state2")
-        self.go_back()
+        responese = send_text_message(sender_id, "Your Password :")
 
-    def on_exit_state2(self):
-        print('Leaving state2')
+    def on_enter_accountFail(self, event):
+        print("Account Fail")
+        sender_id = event['sender']['id']
+        responese = send_text_message(sender_id, "wrong account!")
+        self.back_login(event)
+
+    def on_enter_loginSucceed(self, event) :
+        sender_id = event['sender']['id']
+        responese = send_text_message(sender_id, "~~~ login succeed ~~~")
+        responese = send_image_url(sender_id, "https://i.imgur.com/74fMPke.png")
+        self.intoHall(event)
+
+    def on_enter_loginFail(self, event) :
+        sender_id = event['sender']['id']
+        responese = send_text_message(sender_id, "wrong password!")
+        self.back_login(event)
+
+    def on_enter_hall(self, event) :
+        sender_id = event['sender']['id']
+        responese = send_image_url(sender_id, "https://i.imgur.com/YH8h4dY.png")
+
+
+#----------------------------------------------------------------#
+       
+
+
+
+#----------------------------------------------------------------#
+
+    def accessDB(self):
+        conn = DBHandler.connect()
+        cursor = conn.cursor()
+        db = DBHandler(conn, cursor)
+        return db
