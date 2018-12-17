@@ -52,8 +52,18 @@ class DBHandler:
 
         return result
 
-    def registerAccount() :
-        pass
+    def registerAccount(self, account, passowrd) :
+        self.re_connect()
+        result = False
+        code = self.SHA256(passowrd)
+        try :
+            sql = "INSERT INTO user(account, nickname, password) VALUES('%s', '.', '%s')" % (account, code)
+            self.cursor.execute(sql)
+            self.conn.commit()
+            result = True
+        except :
+            self.conn.rollback()
+        return result
 
     def SHA256(self, string):
         encoder = hashlib.sha256()
