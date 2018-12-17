@@ -11,12 +11,14 @@ class TocMachine(GraphMachine):
             model=self,
             **machine_configs
         )
+        self.account = ""
 
 #----------------------------------------------------------------#
 
     def to_home(self):
         if self.state == 'user':
             return False
+        self.account = ""
         return True
 
     def to_login(self, event):
@@ -29,13 +31,33 @@ class TocMachine(GraphMachine):
         if event.get("message"):
             account = event['message']['text']
             db = self.accessDB()
-            return db.confirmAccount(account)
+            if db.confirmAccount(account) :
+                self.account = account
+                return True
+            else :
+                return False
 
     def to_loginSucceed(self, event):
         if event.get("message"):
             psd = event['message']['text']
             db = self.accessDB()
             return db.confirmPassword(psd)
+
+    def to_register(self, event):
+        if event.get("message"):
+            text = event['message']['text']
+            return text.lower() == 'register'
+        return False
+
+    def to_newAccountOK(self,  event):
+        if event.get("message"):
+            account = event['message']['text']
+            db = self.accessDB()
+            if db.confirmAccount(account) :
+                return False
+            else :
+                self.account = account
+                return True
 
 
 #----------------------------------------------------------------#
@@ -70,6 +92,19 @@ class TocMachine(GraphMachine):
         sender_id = event['sender']['id']
         responese = send_text_message(sender_id, "wrong password!")
         self.back_login(event)
+
+    def on_enter_register(self, event) :
+        sender_id = event['sender']['id']
+        responese = send_text_message(sender_id, "Your New Account :")
+
+    def on_enter_newAccountOK(self, event) :
+        sender_id = event['sender']['id']
+        responese = send_text_message(sender_id, "Your Account is : " + self.account + "\nYour Password :")
+
+    def on_enter_newAccountFail(self, event) :
+        sender_id = event['sender']['id']
+        responese = send_text_message(sender_id, "the account has been registered")
+        self.back_register(event)
 
     def on_enter_hall(self, event) :
         sender_id = event['sender']['id']

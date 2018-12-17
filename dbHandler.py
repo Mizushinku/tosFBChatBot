@@ -52,6 +52,9 @@ class DBHandler:
 
         return result
 
+    def registerAccount() :
+        pass
+
     def SHA256(self, string):
         encoder = hashlib.sha256()
         encoder.update(string.encode('utf-8'))

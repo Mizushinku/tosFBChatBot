@@ -13,6 +13,9 @@ machine = TocMachine(
         'accountFail',
         'loginSucceed',
         'loginFail',
+        'register',
+        'newAccountOK',
+        'newAccountFail',
         'hall'
     ],
     transitions=[
@@ -23,6 +26,8 @@ machine = TocMachine(
                 'login',
                 'accountOK',
                 'loginSucceed',
+                'register',
+                'newAccountOK',
                 'hall'
             ],
             'dest':'user',
@@ -75,7 +80,32 @@ machine = TocMachine(
             'trigger' : 'intoHall',
             'source' : 'loginSucceed',
             'dest' : 'hall',
-        }
+        },
+        #-- register ---------------------
+        {
+            'trigger' : 'advance',
+            'source' : 'user',
+            'dest' : 'register',
+            'conditions' : 'to_register'
+        },
+        #-------- newAccount --------------
+        {
+            'trigger' : 'advance',
+            'source' : 'register',
+            'dest' : 'newAccountOK',
+            'conditions' : 'to_newAccountOK'
+        },
+        {
+            'trigger' : 'advance',
+            'source' : 'register',
+            'dest' : 'newAccountFail',
+            'unless' : 'to_newAccountOK'
+        },
+        {
+            'trigger' : 'back_register',
+            'source' : 'newAccountFail',
+            'dest' : 'register'
+        },
     ],
     initial='user',
     auto_transitions=False,
