@@ -55,8 +55,32 @@ The initial state is set to `user`.
 * **login**
 	* user input his/her account 
 		* `if account exist` : go to state **accountOK**
-		* `else` : go to state **accountFail** and reply "wrong account!"
+		* `else` : go to state **accountFail** and reply "wrong account!", 
 			       then back to state **login**
+
+* **accountOK**
+	* user input his/her password
+		* `if password correct` : go to state **loginSucceed** and then go to state **hall**
+		* `else` : go to state **loginFail** and reply "wrong password!", 
+			       then back to state **accountOK**
+
+* **register**
+	* user input his/her new account
+		* `if the account already exist` : go to state **newAccountFail** and reply the message, 
+			then  back to state **register**
+		* `else` : go to state **newAccountOK**
+
+* **newAccountOK**
+	* user input his/her new password
+		* store the new account and the encoded password into the DB, 
+			then go to state **makeNickName**
+
+* **makeNickName**
+	* user input his/her nickname with the new account, 
+		then go to state **hall**
+
+* **hall**
+	...
 
 
 ## Reference
