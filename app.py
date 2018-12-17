@@ -18,13 +18,14 @@ machine = TocMachine(
         'newAccountFail',
         'newPasswordOK',
         'makeNickName',
-        'hall'
+        'hall',
+        'changeNickName',
+        'changeNickNameSucceed',
     ],
     transitions=[
         {
             'trigger': 'back_home',
             'source': [
-                'user',
                 'login',
                 'accountOK',
                 'loginSucceed',
@@ -33,7 +34,27 @@ machine = TocMachine(
                 'hall'
             ],
             'dest':'user',
-            'conditions':'to_home'
+        },
+        {
+            'trigger' : 'back_hall',
+            'source' : [
+                'changeNickName',
+                'changeNickNameSucceed',
+            ],
+            'dest' : 'hall'
+        },
+        #-- change nickname -----------
+        {
+            'trigger' : 'advance',
+            'source' : 'hall',
+            'dest' : 'changeNickName',
+            'conditions' : 'to_changeNickName'
+        },
+        {
+            'trigger' : 'advance',
+            'source' : 'changeNickName',
+            'dest' : 'changeNickNameSucceed',
+            'before' : 'change_nickname'
         },
         #-- login ---------------------
         {
@@ -170,8 +191,9 @@ def webhook_handler():
                 msg = "Hi, %s (%s)" % (machine.nickname, machine.account)
                 send_text_message(sender_id, msg)
         elif text.lower() == '!home':
-            machine.back_home()
-            send_text_message(sender_id, "Back To HOME~")
+            machine.back_home(event)
+        elif text.lower() == '!hall' :
+            machine.back_hall(event)
         else:
             machine.advance(event)
 

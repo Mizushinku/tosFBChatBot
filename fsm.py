@@ -16,11 +16,6 @@ class TocMachine(GraphMachine):
 
 #----------------------------------------------------------------#
 
-    def to_home(self):
-        if self.state == 'user':
-            return False
-        self.account = ""
-        return True
 
     def to_login(self, event):
         if event.get("message"):
@@ -72,11 +67,26 @@ class TocMachine(GraphMachine):
             db = self.accessDB()
             db.updateNickName(self.account, nickname)
 
+    def to_changeNickName(self, event):
+        if event.get("message"):
+            text = event['message']['text']
+            return text.lower() == 'change nickname'
+
+    def change_nickname(self, event) :
+        if event.get("message"):
+            nickname = event['message']['text']
+            db = self.accessDB()
+            db.updateNickName(self.account, nickname)
+            self.nickname = nickname
+
 
 #----------------------------------------------------------------#
 
-    def on_enter_user(self):
-        print("I'm starting form initial state!")
+    def on_enter_user(self, event):
+        self.account = ""
+        self.nickname = ""
+        sender_id = event['sender']['id']
+        send_text_message(sender_id, "Back To HOME~")
 
     def on_enter_login(self, event):
         print("I'm login...")
@@ -129,7 +139,18 @@ class TocMachine(GraphMachine):
         responese = send_image_url(sender_id, "https://i.imgur.com/YH8h4dY.png")
         db = self.accessDB()
         self.nickname = db.getNickName(self.account)
-        responese = send_text_message(sender_id, self.nickname + ", welcome to the hall :D") 
+        responese = send_text_message(sender_id, self.nickname + ", welcome to the hall :D")
+
+    def on_enter_changeNickName(self, event) :
+        sender_id = event['sender']['id']
+        msg = "your nickname is : \" %s \",\nPlease input a new nickname :" % (self.nickname)
+        responese = send_text_message(sender_id, msg)
+
+    def on_enter_changeNickNameSucceed(self, event) :
+        sender_id = event['sender']['id']
+        msg = "your new nickname is : \" %s \""% (self.nickname)
+        responese = send_text_message(sender_id, msg)
+        self.back_hall(event)
 
 
 #----------------------------------------------------------------#
