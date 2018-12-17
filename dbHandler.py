@@ -57,13 +57,32 @@ class DBHandler:
         result = False
         code = self.SHA256(passowrd)
         try :
-            sql = "INSERT INTO user(account, nickname, password) VALUES('%s', '.', '%s')" % (account, code)
+            sql = "INSERT INTO user(account, nickname, password) VALUES('%s', 'guest', '%s')" % (account, code)
             self.cursor.execute(sql)
             self.conn.commit()
             result = True
         except :
             self.conn.rollback()
         return result
+
+    def updateNickName(self, account, newName) :
+        self.re_connect()
+        result = False
+        try :
+            sql = "UPDATE user SET nickname = '%s' WHERE account = '%s'" % (newName, account)
+            self.cursor.execute(sql)
+            self.conn.commit()
+            result = True
+        except :
+            self.conn.rollback()
+        return result
+
+    def getNickName(self, account) :
+        self.re_connect()
+        sql = "SELECT nickname FROM user WHERE account = '%s'" % (account)
+        self.cursor.execute(sql)
+        row = self.cursor.fetchone()
+        return row[0]
 
     def SHA256(self, string):
         encoder = hashlib.sha256()

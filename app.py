@@ -17,7 +17,7 @@ machine = TocMachine(
         'newAccountOK',
         'newAccountFail',
         'newPasswordOK',
-        'newPasswordFail',
+        'makeNickName',
         'hall'
     ],
     transitions=[
@@ -30,7 +30,6 @@ machine = TocMachine(
                 'loginSucceed',
                 'register',
                 'newAccountOK',
-                'newPasswordOK',
                 'hall'
             ],
             'dest':'user',
@@ -115,6 +114,18 @@ machine = TocMachine(
             'source' : 'newAccountOK',
             'dest' : 'newPasswordOK',
             'conditions' : 'to_newPasswordOK'
+        },
+        {
+            'trigger' : 'goto_makeNickName',
+            'source' : 'newPasswordOK',
+            'dest' : 'makeNickName',
+        },
+        #-------- newNickName --------------
+        {
+            'trigger' : 'advance',
+            'source' : 'makeNickName',
+            'dest' : 'hall',
+            'before' : 'make_new_nickname'
         }
     ],
     initial='user',
@@ -152,6 +163,12 @@ def webhook_handler():
         sender_id = event['sender']['id']
         if text.lower() == '!state':
             send_text_message(sender_id, 'FSM SATTE = ' + machine.state)
+        elif text.lower() == '!who' :
+            if(machine.account == "") :
+                send_text_message(sender_id, "* not login *")
+            else :
+                msg = "Hi, %s (%s)" % (machine.nickname, machine.account)
+                send_text_message(sender_id, msg)
         elif text.lower() == '!home':
             machine.back_home()
             send_text_message(sender_id, "Back To HOME~")

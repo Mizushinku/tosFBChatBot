@@ -12,6 +12,7 @@ class TocMachine(GraphMachine):
             **machine_configs
         )
         self.account = ""
+        self.nickname = ""
 
 #----------------------------------------------------------------#
 
@@ -65,6 +66,12 @@ class TocMachine(GraphMachine):
             db = self.accessDB()
             return db.registerAccount(self.account, password)
 
+    def make_new_nickname(self, event) :
+        if event.get("message"):
+            nickname = event['message']['text']
+            db = self.accessDB()
+            db.updateNickName(self.account, nickname)
+
 
 #----------------------------------------------------------------#
 
@@ -112,9 +119,17 @@ class TocMachine(GraphMachine):
         responese = send_text_message(sender_id, "the account has been registered")
         self.back_register(event)
 
+    def on_enter_newPasswordOK(self, event) :
+        sender_id = event['sender']['id']
+        responese = send_text_message(sender_id, "register succeed!\nPlease set your nickname(can change later) :")
+        self.goto_makeNickName(event)
+
     def on_enter_hall(self, event) :
         sender_id = event['sender']['id']
         responese = send_image_url(sender_id, "https://i.imgur.com/YH8h4dY.png")
+        db = self.accessDB()
+        self.nickname = db.getNickName(self.account)
+        responese = send_text_message(sender_id, self.nickname + ", welcome to the hall :D") 
 
 
 #----------------------------------------------------------------#

@@ -1,10 +1,6 @@
 # TOC Project 2019
 
-Template Code for TOC Project 2019
-
 A Facebook messenger bot based on a finite state machine
-
-More details in the [Slides](https://hackmd.io/p/SkpBR-Yam#/) and [FAQ](https://hackmd.io/s/B1Xw7E8kN)
 
 ## Setup
 
@@ -49,14 +45,18 @@ python3 app.py
 ## Usage
 The initial state is set to `user`.
 
-Every time `user` state is triggered to `advance` to another state, it will `go_back` to `user` state after the bot replies corresponding message.
 
-* user
-	* Input: "go to state1"
-		* Reply: "I'm entering state1"
+* **user**
+	* Input : "login"
+		* go to state **login** and ask for the account
+	* Input : "register"
+		* go to state **register** and let user creat a new account
 
-	* Input: "go to state2"
-		* Reply: "I'm entering state2"
+* **login**
+	* user input his/her account 
+		* `if account exist` : go to state **accountOK**
+		* `else` : go to state **accountFail** and reply "wrong account!"
+			       then back to state **login**
 
 
 ## Reference
