@@ -59,6 +59,12 @@ class TocMachine(GraphMachine):
                 self.account = account
                 return True
 
+    def to_newPasswordOK(self, event):
+        if event.get("message"):
+            password = event['message']['text']
+            db = self.accessDB()
+            return db.registerAccount(self.account, password)
+
 
 #----------------------------------------------------------------#
 
