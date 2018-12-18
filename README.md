@@ -96,9 +96,14 @@ The initial state is set to `user`.
 
 * **confirmNewPassword**
 	* ask for input new password again 
-		* `if the user_input == new password` : go to state **updatePassword**
+		* `if the user_input == new password` : go to state **makeSureP**
 		* `else` : go to state **confirmNewPasswordFail** and reply "WRONG :(", 
 			       then go back state **confirmNewPassword**
+
+* **makeSureP**
+	* show buttons to user, and make sure that user wants to change password
+		* push "Yes" : go to state **updatePassword**
+		* push "No" : back to state **hall**
 
 * **updatePassword**
 	* update the new password into DB and back to state **hall**

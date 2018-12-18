@@ -2,7 +2,7 @@ from transitions.extensions import GraphMachine
 import pymysql
 from dbHandler import DBHandler
 
-from utils import send_text_message, send_image_url
+from utils import send_text_message, send_image_url, send_button_message, send_book_list
 
 
 class TocMachine(GraphMachine):
@@ -89,9 +89,14 @@ class TocMachine(GraphMachine):
         if event.get("message"):
             self.newPassword = event['message']['text']
 
-    def to_updatePassword(self, event) :
+    def to_makeSureP(self, event) :
         if event.get("message"):
             return self.newPassword == event['message']['text']
+
+    def to_viewList(self, event) :
+        if event.get("message"):
+            text = event['message']['text']
+            return text.lower() == 'recommend'
 
 
 #----------------------------------------------------------------#
@@ -183,6 +188,24 @@ class TocMachine(GraphMachine):
         responese = send_text_message(sender_id, msg)
         self.back_confirmNewPassword(event)
 
+    def on_enter_makeSureP(self, event) :
+        sender_id = event['sender']['id']
+        text = "make sure change password"
+        buttons = [
+            {
+                "type" : "postback",
+                "title" : "Yes",
+                "payload" : "MSP/Yes"
+            },
+            {
+                "type" : "postback",
+                "title" : "No",
+                "payload" : "MSP/No"
+            }
+        ]
+        send_button_message(sender_id, text, buttons)
+        
+
     def on_enter_updatePassword(self, event) :
         db = self.accessDB()
         db.updatePassword(self.account, self.newPassword)
@@ -191,6 +214,9 @@ class TocMachine(GraphMachine):
         responese = send_text_message(sender_id, msg)
         self.back_hall(event)
 
+    def on_enter_viewList(self, event) :
+        sender_id = event['sender']['id']
+        send_book_list(sender_id)
     
 
 

@@ -1,7 +1,7 @@
 from bottle import route, run, request, abort, static_file
 
 from fsm import TocMachine
-from utils import send_text_message
+from utils import send_text_message, send_button_message, send_book_list
 
 
 VERIFY_TOKEN = "12399987"
@@ -23,8 +23,10 @@ machine = TocMachine(
         'changeNickNameSucceed',
         'changePassword',
         'confirmNewPassword',
+        'makeSureP',
         'updatePassword',
         'confirmNewPasswordFail',
+        'viewList',
     ],
     transitions=[
         {
@@ -46,9 +48,18 @@ machine = TocMachine(
                 'changeNickNameSucceed',
                 'changePassword',
                 'confirmNewPassword',
+                'makeSureP',
                 'updatePassword',
+                'viewList',
             ],
             'dest' : 'hall'
+        },
+        #-- view book list ------------
+        {
+            'trigger' : 'advance',
+            'source' : 'hall',
+            'dest' : 'viewList',
+            'conditions' : 'to_viewList'
         },
         #-- change password -----------
         {
@@ -66,19 +77,24 @@ machine = TocMachine(
         {
             'trigger' : 'advance',
             'source' : 'confirmNewPassword',
-            'dest' : 'updatePassword',
-            'conditions' : 'to_updatePassword'
+            'dest' : 'makeSureP',
+            'conditions' : 'to_makeSureP'
         },
         {
             'trigger' : 'advance',
             'source' : 'confirmNewPassword',
             'dest' : 'confirmNewPasswordFail',
-            'unless' : 'to_updatePassword'
+            'unless' : 'to_makeSureP'
         },
         {
             'trigger' : 'back_confirmNewPassword',
             'source' : 'confirmNewPasswordFail',
             'dest' : 'confirmNewPassword',
+        },
+        {
+            'trigger' : 'goto_updatePassword',
+            'source' : 'makeSureP',
+            'dest' : 'updatePassword',
         },
         #-- change nickname -----------
         {
@@ -207,9 +223,11 @@ def setup_webhook():
     else:
         abort(403)
 
-
+post_cnt = 0
 @route("/webhook", method="POST")
 def webhook_handler():
+    global post_cnt
+    post_cnt += 1
     body = request.json
     print('\nFSM STATE: ' + machine.state)
     print('REQUEST BODY: ')
@@ -217,24 +235,13 @@ def webhook_handler():
 
     if body['object'] == "page":
         event = body['entry'][0]['messaging'][0]
-        text = event['message']['text']
-        sender_id = event['sender']['id']
-        if text.lower() == '!state':
-            send_text_message(sender_id, 'FSM SATTE = ' + machine.state)
-        elif text.lower() == '!who' :
-            if(machine.account == "") :
-                send_text_message(sender_id, "* not login *")
-            else :
-                msg = "Hi, %s (%s)" % (machine.nickname, machine.account)
-                send_text_message(sender_id, msg)
-        elif text.lower() == '!home':
-            machine.back_home(event)
-        elif text.lower() == '!hall' :
-            machine.back_hall(event)
-        else:
-            machine.advance(event)
+        if 'postback' in event  :
+            handle_postback(event)
+        else :
+            handle_text(event)
+        
 
-        print("\n\n----***-------***-----***----***----***---\n\n")
+        print("\n\n----***-------***-----***----***----***---  %d\n\n" % (post_cnt))
         return 'OK'
 
 
@@ -242,6 +249,38 @@ def webhook_handler():
 def show_fsm():
     machine.get_graph().draw('fsm.png', prog='dot', format='png')
     return static_file('fsm.png', root='./', mimetype='image/png')
+
+
+def handle_text(event) :
+    text = event['message']['text']
+    sender_id = event['sender']['id']
+    if text.lower() == '!state':
+        send_text_message(sender_id, 'FSM SATTE = ' + machine.state)
+    elif text.lower() == '!who' :
+        if(machine.account == "") :
+            send_text_message(sender_id, "* not login *")
+        else :
+            msg = "Hi, %s (%s)" % (machine.nickname, machine.account)
+            send_text_message(sender_id, msg)
+    elif text.lower() == '!home':
+        machine.back_home(event)
+    elif text.lower() == '!hall' :
+        machine.back_hall(event)
+    elif text.lower() == '!list' :
+        send_book_list(sender_id)
+    else:
+        machine.advance(event)
+
+
+def handle_postback(event) :
+    payload = event['postback']['payload'].split("/")
+    if payload[0] == 'MSP' :
+        if payload[1] == 'Yes' :
+            machine.goto_updatePassword(event)
+        else :
+            machine.back_hall(event)
+    elif False:
+        pass
 
 
 if __name__ == "__main__":
