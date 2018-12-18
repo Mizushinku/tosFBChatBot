@@ -80,8 +80,29 @@ The initial state is set to `user`.
 		then go to state **hall**
 
 * **hall**
-	...
+	* Input : "change nickname"
+		* go to state **changNickName** and let user input new nickname
+	* Input : "change password"
+		* go to state **changePassword** and ask for a new password
+
+* **changNickName**
+	* user input his/her new nickname and go to state **changNickNameSucceed**
+
+* **changNickNameSucceed**
+	* update the new nickname into DB and back to state **hall**
+
+* **changePassword**
+	* user input a new password and go to next state **confirmNewPassword**
+
+* **confirmNewPassword**
+	* ask for input new password again 
+		* `if the user_input == new password` : go to state **updatePassword**
+		* `else` : go to state **confirmNewPasswordFail** and reply "WRONG :(", 
+			       then go back state **confirmNewPassword**
+
+* **updatePassword**
+	* update the new password into DB and back to state **hall**
 
 
 ## Reference
-[TOC-Project-2017](https://github.com/Lee-W/TOC-Project-2017) ❤️ [@Lee-W](https://github.com/Lee-W)
+[TOC-Project-2017](https://github.com/Lee-W/TOC-Project-2017) ❤️ [@Mizu](https://github.com/MizuShinku)
