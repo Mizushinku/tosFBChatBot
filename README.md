@@ -85,7 +85,7 @@ The initial state is set to `user`.
 	* Input : "change password"
 		* go to state **changePassword** and ask for a new password
 	* Input : "recommend"
-	 * go to state **viewList**
+		* go to state **viewList**
 
 * **changNickName**
 	* user input his/her new nickname and go to state **changNickNameSucceed**
