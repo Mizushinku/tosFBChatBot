@@ -84,6 +84,16 @@ class DBHandler:
         row = self.cursor.fetchone()
         return row[0]
 
+    def updatePassword(self, account, newPassword) :
+        self.re_connect()
+        new_code = self.SHA256(newPassword)
+        try :
+            sql = "UPDATE user SET password = '%s' WHERE account = '%s'" % (new_code, account)
+            self.cursor.execute(sql)
+            self.conn.commit()
+        except :
+            self.conn.rollback()
+
     def SHA256(self, string):
         encoder = hashlib.sha256()
         encoder.update(string.encode('utf-8'))

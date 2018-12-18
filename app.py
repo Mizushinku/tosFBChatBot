@@ -21,6 +21,10 @@ machine = TocMachine(
         'hall',
         'changeNickName',
         'changeNickNameSucceed',
+        'changePassword',
+        'confirmNewPassword',
+        'updatePassword',
+        'confirmNewPasswordFail',
     ],
     transitions=[
         {
@@ -31,7 +35,7 @@ machine = TocMachine(
                 'loginSucceed',
                 'register',
                 'newAccountOK',
-                'hall'
+                'hall',
             ],
             'dest':'user',
         },
@@ -40,8 +44,41 @@ machine = TocMachine(
             'source' : [
                 'changeNickName',
                 'changeNickNameSucceed',
+                'changePassword',
+                'confirmNewPassword',
+                'updatePassword',
             ],
             'dest' : 'hall'
+        },
+        #-- change password -----------
+        {
+            'trigger' : 'advance',
+            'source' : 'hall',
+            'dest' : 'changePassword',
+            'conditions' : 'to_changePassword'
+        },
+        {
+            'trigger' : 'advance',
+            'source' : 'changePassword',
+            'dest' : 'confirmNewPassword',
+            'before' : 'before_confirmNewPassword'
+        },
+        {
+            'trigger' : 'advance',
+            'source' : 'confirmNewPassword',
+            'dest' : 'updatePassword',
+            'conditions' : 'to_updatePassword'
+        },
+        {
+            'trigger' : 'advance',
+            'source' : 'confirmNewPassword',
+            'dest' : 'confirmNewPasswordFail',
+            'unless' : 'to_updatePassword'
+        },
+        {
+            'trigger' : 'back_confirmNewPassword',
+            'source' : 'confirmNewPasswordFail',
+            'dest' : 'confirmNewPassword',
         },
         #-- change nickname -----------
         {

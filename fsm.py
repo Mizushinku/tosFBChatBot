@@ -13,6 +13,7 @@ class TocMachine(GraphMachine):
         )
         self.account = ""
         self.nickname = ""
+        self.newPassword = ""
 
 #----------------------------------------------------------------#
 
@@ -78,6 +79,19 @@ class TocMachine(GraphMachine):
             db = self.accessDB()
             db.updateNickName(self.account, nickname)
             self.nickname = nickname
+    
+    def to_changePassword(self, event) :
+        if event.get("message"):
+            text = event['message']['text']
+            return text.lower() == 'change password'
+
+    def before_confirmNewPassword(self, event) :
+        if event.get("message"):
+            self.newPassword = event['message']['text']
+
+    def to_updatePassword(self, event) :
+        if event.get("message"):
+            return self.newPassword == event['message']['text']
 
 
 #----------------------------------------------------------------#
@@ -140,6 +154,7 @@ class TocMachine(GraphMachine):
         db = self.accessDB()
         self.nickname = db.getNickName(self.account)
         responese = send_text_message(sender_id, self.nickname + ", welcome to the hall :D")
+        self.newPassword = ""
 
     def on_enter_changeNickName(self, event) :
         sender_id = event['sender']['id']
@@ -151,6 +166,32 @@ class TocMachine(GraphMachine):
         msg = "your new nickname is : \" %s \""% (self.nickname)
         responese = send_text_message(sender_id, msg)
         self.back_hall(event)
+
+    def on_enter_changePassword(self, event) :
+        sender_id = event['sender']['id']
+        msg = "Please input your new password :"
+        responese = send_text_message(sender_id, msg)
+
+    def on_enter_confirmNewPassword(self, event) :
+        sender_id = event['sender']['id']
+        msg = "Please input your new password again:"
+        responese = send_text_message(sender_id, msg)
+
+    def on_enter_confirmNewPasswordFail(self, event) :
+        sender_id = event['sender']['id']
+        msg = "WRONG! :("
+        responese = send_text_message(sender_id, msg)
+        self.back_confirmNewPassword(event)
+
+    def on_enter_updatePassword(self, event) :
+        db = self.accessDB()
+        db.updatePassword(self.account, self.newPassword)
+        sender_id = event['sender']['id']
+        msg = "Change password succeed! :D"
+        responese = send_text_message(sender_id, msg)
+        self.back_hall(event)
+
+    
 
 
 #----------------------------------------------------------------#
