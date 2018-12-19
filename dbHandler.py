@@ -35,6 +35,8 @@ class DBHandler:
     def confirmAccount(self, account):
         self.re_connect()
         result = False
+        if account == 'foo' or account == 'user' or account == 'recommends' :
+            return True
         sql = "SELECT account FROM user WHERE account = '%s'" % (account)
         self.cursor.execute(sql)
         if self.cursor.rowcount == 1:
@@ -97,7 +99,8 @@ class DBHandler:
 
     def getList(self, pos) :
         self.re_connect()
-        sql = "SELECT title, subtitle, image_url, payload FROM recommends WHERE PK > %d AND PK <= (%d + 3)" % (pos, pos)
+        #sql = "SELECT title, subtitle, image_url, payload FROM recommends WHERE PK > %d AND PK <= (%d + 3)" % (pos, pos)
+        sql = "SELECT title, subtitle, image_url, payload FROM recommends ORDER BY PK ASC LIMIT %d, 3" % (pos)
         self.cursor.execute(sql)
         books = list(())
         if self.cursor.rowcount > 0 :
@@ -122,14 +125,41 @@ class DBHandler:
         except:
             self.conn.rollback()
 
+    def deleteBook(self, account, PK) :
+        self.re_connect()
+        result = False
+        try :
+            sql = "DELETE FROM %s WHERE PK = %s" % (account, PK)
+            self.cursor.execute(sql)
+            self.conn.commit()
+            result = True
+        except :
+            self.conn.rollback()
+        return result
+
+    def deleteAllBook(self, account) :
+        self.re_connect()
+        result = False
+        try :
+            sql = "DELETE FROM %s WHERE 1" % (account)
+            self.cursor.execute(sql)
+            self.conn.commit()
+            result = True
+        except :
+            self.conn.rollback()
+        return result
+
     def getPrivatebooks(self, account, pos) :
-        sql = "SELECT title, subtitle, image_url FROM %s ORDER BY PK ASC LIMIT %d, 3" % (account, pos)
+        sql = "CREATE TABLE IF NOT EXISTS %s (PK INT auto_increment PRIMARY KEY,title VARCHAR(50),subtitle VARCHAR(80),image_url VARCHAR(200))ENGINE=innodb DEFAULT CHARSET=utf8" % (account)
+        self.cursor.execute(sql)
+
+        sql = "SELECT title, subtitle, image_url, PK FROM %s ORDER BY PK ASC LIMIT %d, 3" % (account, pos)
         self.cursor.execute(sql)
         books = list(())
         if self.cursor.rowcount > 0:
             for i in range(0, self.cursor.rowcount) :
                 row = self.cursor.fetchone()
-                books.append(BookInfo(row[0], row[1], row[2], ""))
+                books.append(BookInfo(row[0], row[1], row[2], row[3]))
         return books
 
 

@@ -275,13 +275,12 @@ def handle_text(event) :
         machine.back_home(event)
     elif text.lower() == '!hall' :
         machine.back_hall(event)
-    elif text.lower() == '!list' :
-        machine.on_enter_viewList(event)
     else:
         machine.advance(event)
 
 
 def handle_postback(event) :
+    sender_id = event['sender']['id']
     payload = event['postback']['payload'].split("/")
     if payload[0] == 'MSP' :
         if payload[1] == 'Yes' :
@@ -291,12 +290,29 @@ def handle_postback(event) :
     elif payload[0] == 'VBL':
         if machine.account != "" :
             if payload[1] == 'more' :
-                pass
+                if machine.state == 'viewList' :
+                    machine.viewPos += 3
+                    machine.on_enter_viewList(event)
+                else :
+                    send_text_message(sender_id, "not in right state :(")
             else :
                 machine.userAdd(event['postback']['payload'])
+        else :
+            send_text_message(sender_id, "* not login *")
     elif payload[0] == 'VPBL' :
         if machine.account != "":
-            pass
+            if payload[1] == 'more' :
+                if machine.state == 'viewPrivateList' :
+                    machine.privateViewPos += 3
+                    machine.on_enter_viewPrivateList(event)
+                else :
+                    send_text_message(sender_id, "not in right state :(")
+            elif payload[1] == 'BAD' :
+                machine.badThing(sender_id)
+            else :
+                machine.userDelete(sender_id, payload[1])
+        else :
+            send_text_message(sender_id, "* not login *")
 
 
 if __name__ == "__main__":

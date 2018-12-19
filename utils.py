@@ -77,42 +77,6 @@ def send_book_list(id, books) :
                             "subtitle" : "books recommended for you ~",
                             "image_url" : "https://i.imgur.com/gcUT5vZ.png",
                         },
-                        {
-                            "title" : books[0].title,
-                            "subtitle" : books[0].subtitle,
-                            "image_url" : books[0].image_url,
-                            "buttons" : [
-                                {
-                                    "type" : "postback",
-                                    "title" : "ADD",
-                                    "payload" : books[0].payload
-                                }
-                            ]
-                        },
-                        {
-                            "title" : books[1].title,
-                            "subtitle" : books[1].subtitle,
-                            "image_url" : books[1].image_url,
-                            "buttons" : [
-                                {
-                                    "type" : "postback",
-                                    "title" : "ADD",
-                                    "payload" : books[1].payload
-                                }
-                            ]
-                        },
-                        {
-                            "title" : books[2].title,
-                            "subtitle" : books[2].subtitle,
-                            "image_url" : books[2].image_url,
-                            "buttons" : [
-                                {
-                                    "type" : "postback",
-                                    "title" : "ADD",
-                                    "payload" : books[2].payload
-                                }
-                            ]
-                        },
                     ],
                     "buttons" : [
                         {
@@ -125,6 +89,21 @@ def send_book_list(id, books) :
             }
         }
     }
+    for i in range(0, len(books)) :
+        newE = {
+            "title" : books[i].title,
+            "subtitle" : books[i].subtitle,
+            "image_url" : books[i].image_url,
+            "buttons" : [
+                {
+                    "type" : "postback",
+                    "title" : "ADD",
+                    "payload" : books[i].payload
+                }
+            ]
+        }
+        payload['message']['attachment']['payload']['elements'].append(newE)
+
     response = requests.post(url, json=payload)
     if response.status_code != 200:
         print("Unable to send list: \n" + response.text)
@@ -141,42 +120,6 @@ def send_private_list(id, books) :
                     "template_type": "list",
                     "top_element_style": "compact",
                     "elements": [
-                        {
-                            "title" : books[0].title,
-                            "subtitle" : books[0].subtitle,
-                            "image_url" : books[0].image_url,
-                            "buttons" : [
-                                {
-                                    "type" : "postback",
-                                    "title" : "DELETE",
-                                    "payload" : "DELETE"
-                                }
-                            ]
-                        },
-                        {
-                            "title" : books[1].title,
-                            "subtitle" : books[1].subtitle,
-                            "image_url" : books[1].image_url,
-                            "buttons" : [
-                                {
-                                    "type" : "postback",
-                                    "title" : "DELETE",
-                                    "payload" : "DELETE"
-                                }
-                            ]
-                        },
-                        {
-                            "title" : books[2].title,
-                            "subtitle" : books[2].subtitle,
-                            "image_url" : books[2].image_url,
-                            "buttons" : [
-                                {
-                                    "type" : "postback",
-                                    "title" : "DELETE",
-                                    "payload" : "DELETE"
-                                }
-                            ]
-                        },
                     ],
                     "buttons" : [
                         {
@@ -189,6 +132,37 @@ def send_private_list(id, books) :
             }
         }
     }
+
+    for i in range(0, len(books)) :
+        newE = {
+            "title" : books[i].title,
+            "subtitle" : books[i].subtitle,
+            "image_url" : books[i].image_url,
+            "buttons" : [
+                {
+                    "type" : "postback",
+                    "title" : "DELETE",
+                    "payload" : "VPBL/%d" % (books[i].payload)
+                }
+            ]
+        }
+        payload['message']['attachment']['payload']['elements'].append(newE)
+
+    if len(payload['message']['attachment']['payload']['elements']) < 2 :
+        newE = {
+            "title" : 'don\'t touch the button ' ,
+            "subtitle" : 'bad things will happen',
+            "image_url" : 'https://i.imgur.com/JfGc4eT.png',
+            "buttons" : [
+                {
+                    "type" : "postback",
+                    "title" : "just a button",
+                    "payload" : "VPBL/BAD"
+                }
+            ]
+        }
+        payload['message']['attachment']['payload']['elements'].append(newE)
+
     response = requests.post(url, json=payload)
     if response.status_code != 200:
         print("Unable to send private list: \n" + response.text)

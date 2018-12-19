@@ -116,7 +116,7 @@ The initial state is set to `user`.
 	* show user the recommend book list, and let user add his/her favorite books into a private book list
 
 * **viewPrivateList**
-	* show user's private book list
+	* show user's private book list, and user can delete his/her books here
 
 
 ## Reference

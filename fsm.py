@@ -260,3 +260,19 @@ class TocMachine(GraphMachine):
     def userAdd(self, payload) :
         db = self.accessDB()
         db.addBook(self.account, payload)
+
+    def userDelete(self, sender_id, PK) :
+        db = self.accessDB()
+        if db.deleteBook(self.account, PK) :
+            send_text_message(sender_id, "delete succeed :)")
+            self.privateViewPos -= 1
+        else :
+            send_text_message(sender_id, "Oops! there are some error")
+    
+    def badThing(self, sender_id) :
+        db = self.accessDB()
+        if db.deleteAllBook(self.account) :
+            send_text_message(sender_id, "Vanishment This World!!!")
+        else :
+            send_text_message(sender_id, "Today is your day :D")
+
