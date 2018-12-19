@@ -27,6 +27,7 @@ machine = TocMachine(
         'updatePassword',
         'confirmNewPasswordFail',
         'viewList',
+        'viewPrivateList'
     ],
     transitions=[
         {
@@ -51,8 +52,16 @@ machine = TocMachine(
                 'makeSureP',
                 'updatePassword',
                 'viewList',
+                'viewPrivateList',
             ],
             'dest' : 'hall'
+        },
+        #-- view private list ---------
+        {
+            'trigger' : 'advance',
+            'source' : 'hall',
+            'dest' : 'viewPrivateList',
+            'conditions' : 'to_viewPrivateList'
         },
         #-- view book list ------------
         {
@@ -267,7 +276,7 @@ def handle_text(event) :
     elif text.lower() == '!hall' :
         machine.back_hall(event)
     elif text.lower() == '!list' :
-        send_book_list(sender_id)
+        machine.on_enter_viewList(event)
     else:
         machine.advance(event)
 
@@ -279,8 +288,15 @@ def handle_postback(event) :
             machine.goto_updatePassword(event)
         else :
             machine.back_hall(event)
-    elif False:
-        pass
+    elif payload[0] == 'VBL':
+        if machine.account != "" :
+            if payload[1] == 'more' :
+                pass
+            else :
+                machine.userAdd(event['postback']['payload'])
+    elif payload[0] == 'VPBL' :
+        if machine.account != "":
+            pass
 
 
 if __name__ == "__main__":

@@ -86,6 +86,8 @@ The initial state is set to `user`.
 		* go to state **changePassword** and ask for a new password
 	* Input : "recommend"
 		* go to state **viewList**
+	* Input : "my books"
+		* go to state **viewPrivateList**
 
 * **changNickName**
 	* user input his/her new nickname and go to state **changNickNameSucceed**
@@ -112,6 +114,9 @@ The initial state is set to `user`.
 
 * **viewList**
 	* show user the recommend book list, and let user add his/her favorite books into a private book list
+
+* **viewPrivateList**
+	* show user's private book list
 
 
 ## Reference

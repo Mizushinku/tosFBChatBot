@@ -1,6 +1,7 @@
 import pymysql
 import sys, time, hashlib, datetime
 import importlib
+from bookInfo import BookInfo
 
 pymysql.install_as_MySQLdb()
 
@@ -93,6 +94,44 @@ class DBHandler:
             self.conn.commit()
         except :
             self.conn.rollback()
+
+    def getList(self, pos) :
+        self.re_connect()
+        sql = "SELECT title, subtitle, image_url, payload FROM recommends WHERE PK > %d AND PK <= (%d + 3)" % (pos, pos)
+        self.cursor.execute(sql)
+        books = list(())
+        if self.cursor.rowcount > 0 :
+            for i in range(0, self.cursor.rowcount) :
+                row = self.cursor.fetchone()
+                books.append(BookInfo(row[0], row[1], row[2], row[3]))
+        return books
+
+    def addBook(self, account, payload) :
+        self.re_connect()
+        try :
+            sql = "SELECT title, subtitle, image_url FROM recommends WHERE payload = '%s'" % (payload)
+            self.cursor.execute(sql)
+            row = self.cursor.fetchone()
+
+            sql = "CREATE TABLE IF NOT EXISTS %s (PK INT auto_increment PRIMARY KEY,title VARCHAR(50),subtitle VARCHAR(80),image_url VARCHAR(200))ENGINE=innodb DEFAULT CHARSET=utf8" % (account)
+            self.cursor.execute(sql)
+
+            sql = "INSERT INTO %s(title,subtitle,image_url) VALUES('%s','%s','%s')" % (account, row[0], row[1], row[2])
+            self.cursor.execute(sql)
+            self.conn.commit()
+        except:
+            self.conn.rollback()
+
+    def getPrivatebooks(self, account, pos) :
+        sql = "SELECT title, subtitle, image_url FROM %s ORDER BY PK ASC LIMIT %d, 3" % (account, pos)
+        self.cursor.execute(sql)
+        books = list(())
+        if self.cursor.rowcount > 0:
+            for i in range(0, self.cursor.rowcount) :
+                row = self.cursor.fetchone()
+                books.append(BookInfo(row[0], row[1], row[2], ""))
+        return books
+
 
     def SHA256(self, string):
         encoder = hashlib.sha256()

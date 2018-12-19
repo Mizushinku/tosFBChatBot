@@ -2,7 +2,7 @@ from transitions.extensions import GraphMachine
 import pymysql
 from dbHandler import DBHandler
 
-from utils import send_text_message, send_image_url, send_button_message, send_book_list
+from utils import send_text_message, send_image_url, send_button_message, send_book_list, send_private_list
 
 
 class TocMachine(GraphMachine):
@@ -14,6 +14,8 @@ class TocMachine(GraphMachine):
         self.account = ""
         self.nickname = ""
         self.newPassword = ""
+        self.viewPos = 0
+        self.privateViewPos = 0
 
 #----------------------------------------------------------------#
 
@@ -98,6 +100,10 @@ class TocMachine(GraphMachine):
             text = event['message']['text']
             return text.lower() == 'recommend'
 
+    def to_viewPrivateList(self, event) :
+        if event.get("message"):
+            text = event['message']['text']
+            return text.lower() == 'my books'
 
 #----------------------------------------------------------------#
 
@@ -160,6 +166,8 @@ class TocMachine(GraphMachine):
         self.nickname = db.getNickName(self.account)
         responese = send_text_message(sender_id, self.nickname + ", welcome to the hall :D")
         self.newPassword = ""
+        self.viewPos = 0
+        self.privateViewPos = 0
 
     def on_enter_changeNickName(self, event) :
         sender_id = event['sender']['id']
@@ -216,7 +224,23 @@ class TocMachine(GraphMachine):
 
     def on_enter_viewList(self, event) :
         sender_id = event['sender']['id']
-        send_book_list(sender_id)
+        db = self.accessDB()
+        books = db.getList(self.viewPos)
+        if books :
+            send_book_list(sender_id, books)
+        else :
+            send_text_message(sender_id, "no more recommended books!")
+
+    def on_enter_viewPrivateList(self, event) :
+        sender_id = event['sender']['id']
+        db = self.accessDB()
+        books = db.getPrivatebooks(self.account, self.privateViewPos)
+        if books :
+            send_private_list(sender_id, books)
+        else :
+            send_text_message(sender_id, "no more books in your list!")
+
+
     
 
 
@@ -232,3 +256,7 @@ class TocMachine(GraphMachine):
         cursor = conn.cursor()
         db = DBHandler(conn, cursor)
         return db
+
+    def userAdd(self, payload) :
+        db = self.accessDB()
+        db.addBook(self.account, payload)
